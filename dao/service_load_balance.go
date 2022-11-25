@@ -3,6 +3,7 @@ package dao
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"strings"
 )
 
 // GatewayServiceLoadBalance
@@ -42,4 +43,8 @@ func (m *GatewayServiceLoadBalance) Save(c *gin.Context, tx *gorm.DB) error {
 		return err
 	}
 	return nil
+}
+
+func (m *GatewayServiceLoadBalance) GetIpListByModel() []string {
+	return strings.Split(m.IPList, ",")
 }

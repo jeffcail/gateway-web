@@ -19,8 +19,8 @@ type GatewayAdmin struct {
 	UserName string    `gorm:"column:user_name;NOT NULL"`                           // 用户名
 	Salt     string    `gorm:"column:salt;NOT NULL"`                                // 加密盐值
 	Password string    `gorm:"column:password;NOT NULL"`                            // 密码
-	CreateAt time.Time `gorm:"column:create_at;default:CURRENT_TIMESTAMP;NOT NULL"` // 添加时间
-	UpdateAt time.Time `gorm:"column:update_at;NOT NULL"`                           // 更新时间
+	CreatedAt time.Time `gorm:"column:create_at;default:CURRENT_TIMESTAMP;NOT NULL"` // 添加时间
+	UpdatedAt time.Time `gorm:"column:update_at;NOT NULL"`                           // 更新时间
 	IsDelete int       `gorm:"column:is_delete;NOT NULL"`                           // 是否删除
 }
 
