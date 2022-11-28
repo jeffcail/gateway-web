@@ -24,3 +24,27 @@ func (gr *GrpcRule) Find(c *gin.Context, tx *gorm.DB, search *GrpcRule) (*GrpcRu
 	}
 	return data, nil
 }
+
+func (t *GrpcRule) Save(c *gin.Context, tx *gorm.DB) error {
+	if err := tx.WithContext(c).Save(t).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GrpcRule) ListByServiceID(c *gin.Context, tx *gorm.DB, serviceID int64) ([]GrpcRule, int64, error) {
+	var list []GrpcRule
+	var count int64
+	query := tx.WithContext(c)
+	query = query.Table(t.TableName()).Select("*")
+	query = query.Where("service_id = ?", serviceID)
+	err := query.Order("id desc").Find(&list).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, 0, err
+	}
+	errCount := query.Count(&count).Error
+	if errCount != nil {
+		return nil, 0, err
+	}
+	return list, count, nil
+}

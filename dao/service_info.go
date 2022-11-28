@@ -27,10 +27,7 @@ func (gsi *GatewayServiceInfo) TableName() string {
 func (gsi *GatewayServiceInfo) Find(c *gin.Context, tx *gorm.DB, search *GatewayServiceInfo) (*GatewayServiceInfo, error) {
 	out := &GatewayServiceInfo{}
 	err := tx.WithContext(c).Where(search).First(out).Error
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+	return out, err
 }
 
 func (gsi *GatewayServiceInfo) Save(c *gin.Context, tx *gorm.DB) error {
@@ -39,7 +36,7 @@ func (gsi *GatewayServiceInfo) Save(c *gin.Context, tx *gorm.DB) error {
 
 func (t *GatewayServiceInfo) ServiceDetail(c *gin.Context, tx *gorm.DB, search *GatewayServiceInfo) (
 	*ServiceDetail, error) {
-	if search.ServiceName == "" {
+	if search.ID == 0 {
 		info, err := t.Find(c, tx, search)
 		if err != nil {
 			return nil, err

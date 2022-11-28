@@ -15,7 +15,7 @@ type GatewayServiceHttpRule struct {
 	NeedHttps      int    `gorm:"column:need_https;default:0;NOT NULL"`     // 支持https 1=支持
 	NeedStripUri   int    `gorm:"column:need_strip_uri;default:0;NOT NULL"` // 启用strip_uri 1=启用
 	NeedWebsocket  int    `gorm:"column:need_websocket;default:0;NOT NULL"` // 是否支持websocket 1=支持
-	UrlRewrite     string `gorm:"column:url-rewrite;NOT NULL"`              // url重写功能 格式：^/gatekeeper/test_service(.*) $1 多个逗号间隔
+	UrlRewrite     string `gorm:"column:url_rewrite;NOT NULL"`              // url重写功能 格式：^/gatekeeper/test_service(.*) $1 多个逗号间隔
 	HeaderTransfor string `gorm:"column:header_transfor"`                   // header转换支持增加(add)、删除(del)、修改(edit) 格式: add headname headvalue 多个逗号间隔
 }
 
@@ -27,7 +27,6 @@ func (m *GatewayServiceHttpRule) TableName() string {
 // 查找
 func (m *GatewayServiceHttpRule) Find(c *gin.Context, tx *gorm.DB, search *GatewayServiceHttpRule) (
 	*GatewayServiceHttpRule, error) {
-
 	data := &GatewayServiceHttpRule{}
 	err := tx.WithContext(c).Where(search).Find(data).Error
 	return data, err
