@@ -24,14 +24,14 @@ func ServiceRegister(group *gin.RouterGroup) {
 	group.GET("/service_stat", service.ServiceStat)
 
 	group.POST("/service_add_http", service.ServiceAddHttp)
-	group.POST("/service_update_tcp", service.ServiceUpdateHttp)
+	group.POST("/service_update_http", service.ServiceUpdateHttp)
 	group.POST("/service_add_tcp", service.ServiceAddTcp)
 	group.POST("/service_update_tcp", service.ServiceUpdateTcp)
 	group.POST("/service_add_grpc", service.ServiceAddGrpc)
 	group.POST("/service_update_grpc", service.ServiceUpdateGrpc)
 }
 
-// ServiceAddHttp godoc
+// ServiceUpdateTcp godoc
 // @Summary tcp服务更新
 // @Description tcp服务更新
 // @Tags 服务管理
@@ -119,7 +119,7 @@ func (service *ServiceController) ServiceUpdateTcp(c *gin.Context) {
 
 }
 
-// ServiceAddHttp godoc
+// ServiceAddGrpc godoc
 // @Summary grpc服务添加
 // @Description grpc服务添加
 // @Tags 服务管理
@@ -210,8 +210,90 @@ func (service *ServiceController) ServiceAddGrpc(c *gin.Context) {
 
 }
 
+// ServiceUpdateGrpc godoc
+// @Summary grpc服务更新
+// @Description grpc服务更新
+// @Tags 服务管理
+// @ID /service/service_update_grpc
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceUpdateGrpcInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_update_grpc [post]
 func (service *ServiceController) ServiceUpdateGrpc(c *gin.Context) {
+	params := &dto.ServiceUpdateGrpcInput{}
+	if err := params.BindValidParam(c); err != nil {
+		middleware.ResponseError(c, 2001, err)
+		return
+	}
 
+	if len(strings.Split(params.IpList, ",")) != len(strings.Split(params.WeightList, ",")) {
+		middleware.ResponseError(c, 2002, errors.New("ip列表与权重设置不匹配"))
+		return
+	}
+
+	tx := lib.GORMDefaultPool.Begin()
+
+	s := &dao.GatewayServiceInfo{ID: params.ID}
+	detail, err := s.ServiceDetail(c, lib.GORMDefaultPool, s)
+	if err != nil {
+		middleware.ResponseError(c, 2003, err)
+		return
+	}
+	info := detail.Info
+	info.ServiceDesc = params.ServiceDesc
+	if err := info.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 2004, err)
+		return
+	}
+
+	loadBalance := &dao.GatewayServiceLoadBalance{}
+	if detail.LoadBalance != nil {
+		loadBalance = detail.LoadBalance
+	}
+	loadBalance.ServiceID = info.ID
+	loadBalance.RoundType = params.RoundType
+	loadBalance.IPList = params.IpList
+	loadBalance.WeightList = params.WeightList
+	loadBalance.ForbidList = params.ForbidList
+	if err := loadBalance.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 2005, err)
+		return
+	}
+
+	grpcRule := &dao.GrpcRule{}
+	if detail.GrpcRule != nil {
+		grpcRule = detail.GrpcRule
+	}
+	grpcRule.ServiceID = info.ID
+	grpcRule.HeaderTransfor = params.HeaderTransfor
+	if err := grpcRule.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 2006, err)
+		return
+	}
+
+	accessControl := &dao.GatewayServiceAccessControl{}
+	if detail.AccessControl != nil {
+		accessControl = detail.AccessControl
+	}
+	accessControl.ServiceID = info.ID
+	accessControl.OpenAuth = params.OpenAuth
+	accessControl.BlackList = params.BlackList
+	accessControl.WhiteList = params.WhiteList
+	accessControl.WhiteHostName = params.WhiteHostName
+	accessControl.ClientipFlowLimit = params.ClientIPFlowLimit
+	accessControl.ServiceFlowLimit = params.ServiceFlowLimit
+	if err := accessControl.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 2007, err)
+		return
+	}
+	tx.Commit()
+	middleware.ResponseSuccess(c, "")
+	return
 }
 
 // ServiceStat godoc
@@ -280,7 +362,7 @@ func (service *ServiceController) ServiceStat(c *gin.Context) {
 // @Produce json
 // @Param body body dto.ServiceUpdateHTTPInput true "body"
 // @Success 200 {object} middleware.Response{data=string} "success"
-// @Router /service/service_update_tcp [post]
+// @Router /service/service_update_http [post]
 func (service *ServiceController) ServiceUpdateHttp(c *gin.Context) {
 	params := &dto.ServiceUpdateHTTPInput{}
 	if err := params.BindValidParam(c); err != nil {
