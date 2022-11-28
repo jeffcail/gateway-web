@@ -143,13 +143,13 @@ func (service *ServiceController) ServiceAddGrpc(c *gin.Context) {
 	}
 
 	tcpRuleSearch := &dao.TcpRule{Port: params.Port}
-	if _, err := tcpRuleSearch.Find(c, lib.GORMDefaultPool, tcpRuleSearch); err == nil {
+	if tcpRuleInfo, err := tcpRuleSearch.Find(c, lib.GORMDefaultPool, tcpRuleSearch); err != nil && tcpRuleInfo.ID != 0 {
 		middleware.ResponseError(c, 2003, errors.New("tcp端口被占用，请重新输入"))
 		return
 	}
 
 	grpcRuleSearch := &dao.GrpcRule{Port: params.Port}
-	if _, err := grpcRuleSearch.Find(c, lib.GORMDefaultPool, grpcRuleSearch); err == nil {
+	if grpcRuleInfo, err := grpcRuleSearch.Find(c, lib.GORMDefaultPool, grpcRuleSearch); err != nil && grpcRuleInfo.ID != 0 {
 		middleware.ResponseError(c, 2004, errors.New("grpc端口被占用，请重新输入"))
 		return
 	}
