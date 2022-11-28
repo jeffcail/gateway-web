@@ -6,9 +6,9 @@ import (
 )
 
 type ServiceListInput struct {
-	Info string `json:"info" form:"info" comment:"关键词" example:"" validate:""`
-	PageNo int `json:"page_no" form:"page_no" comment:"页数" example:"1" validate:"required"`
-	PageSize int `json:"page_size" form:"page_size" comment:"每页条数" example:"10" validate:"required"`
+	Info     string `json:"info" form:"info" comment:"关键词" validate:""`
+	PageNo   int    `json:"page_no" form:"page_no" comment:"页数" example:"1" validate:"required"`
+	PageSize int    `json:"page_size" form:"page_size" comment:"每页条数" example:"10" validate:"required"`
 }
 
 func (param *ServiceListInput) BindValidParam(c *gin.Context) error {
@@ -16,19 +16,19 @@ func (param *ServiceListInput) BindValidParam(c *gin.Context) error {
 }
 
 type ServiceListItemOutput struct {
-	ID int64 `json:"id" form:"id"`
+	ID          int64  `json:"id" form:"id"`
 	ServiceName string `json:"service_name" form:"service_name"`
 	ServiceDesc string `json:"service_desc" form:"service_desc"`
-	LoadType int `json:"load_type" form:"load_type"`
+	LoadType    int    `json:"load_type" form:"load_type"`
 	ServiceAddr string `json:"service_addr" form:"service_addr"`
-	Qps int64 `json:"qps" form:"qps"`
-	Qpd int64 `json:"qpd" form:"qpd"`
-	TotalNode int `json:"total_node" form:"total_node"`
+	Qps         int64  `json:"qps" form:"qps"`
+	Qpd         int64  `json:"qpd" form:"qpd"`
+	TotalNode   int    `json:"total_node" form:"total_node"`
 }
 
 type ServiceListOutput struct {
-	Total int64 `json:"total" form:"total" comment:"总数" example:"" validate:""`
-	List []ServiceListItemOutput `json:"list" form:"list" comment:"列表" example:"" validate:""`
+	Total int64                   `json:"total" form:"total" comment:"总数" validate:""`
+	List  []ServiceListItemOutput `json:"list" form:"list" comment:"列表" validate:""`
 }
 
 type ServiceAddTcpInput struct {
@@ -50,4 +50,12 @@ type ServiceAddTcpInput struct {
 
 func (params *ServiceAddTcpInput) GetValidParams(c *gin.Context) error {
 	return public.DefaultGetValidParams(c, params)
+}
+
+type ServiceDDInput struct {
+	ID int64 `json:"id" form:"id" comment:"服务ID" example:"1" validate:"required"`
+}
+
+func (param *ServiceDDInput) BindValidParam(c *gin.Context) error {
+	return public.DefaultGetValidParams(c, param)
 }

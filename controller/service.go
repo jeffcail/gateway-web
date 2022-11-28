@@ -3,13 +3,14 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/gin"
 	"github.com/jeffcail/gateway-web/dao"
 	"github.com/jeffcail/gateway-web/dto"
 	"github.com/jeffcail/gateway-web/middleware"
 	"github.com/jeffcail/gateway-web/public"
-	"strings"
 )
 
 type ServiceController struct{}
@@ -17,8 +18,85 @@ type ServiceController struct{}
 func ServiceRegister(group *gin.RouterGroup) {
 	service := &ServiceController{}
 	group.GET("/service_list", service.ServiceList)
+	group.GET("/service_detail", service.ServiceDetail)
+	group.GET("/service_delete", service.ServiceDelete)
 
 	group.POST("/service_add_tcp", service.ServiceAddTcp)
+}
+
+// ServiceDelete godoc
+// @Summary 服务删除
+// @Description 服务删除
+// @Tags 服务管理
+// @ID /service/service_delete
+// @Accept json
+// @Produce json
+// @Param id query string true "服务ID"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_delete [get]
+func (service *ServiceController) ServiceDelete(c *gin.Context) {
+	params := &dto.ServiceDDInput{}
+	if err := params.BindValidParam(c); err != nil {
+		middleware.ResponseError(c, 2000, err)
+		return
+	}
+
+	tx, err := lib.GetGormPool("default")
+	if err != nil {
+		middleware.ResponseError(c, 2001, err)
+		return
+	}
+
+	serviceInfo := &dao.GatewayServiceInfo{ID: params.ID}
+	serviceInfo, err = serviceInfo.Find(c, tx, serviceInfo)
+	if err != nil {
+		middleware.ResponseError(c, 2002, err)
+		return
+	}
+
+	serviceInfo.IsDelete = 1
+	if err := serviceInfo.Save(c, tx); err != nil {
+		middleware.ResponseError(c, 2003, err)
+		return
+	}
+	middleware.ResponseSuccess(c, "")
+}
+
+// ServiceDetail godoc
+// @Summary 服务详情
+// @Description 服务详情
+// @Tags 服务管理
+// @ID /service/service_detail
+// @Accept  json
+// @Produce  json
+// @Param id query string true "服务ID"
+// @Success 200 {object} middleware.Response{data=dao.ServiceDetail} "success"
+// @Router /service/service_detail [get]
+func (service *ServiceController) ServiceDetail(c *gin.Context) {
+	params := &dto.ServiceDDInput{}
+	if err := params.BindValidParam(c); err != nil {
+		middleware.ResponseError(c, 2000, err)
+		return
+	}
+	tx, err := lib.GetGormPool("default")
+	if err != nil {
+		middleware.ResponseError(c, 2001, err)
+		return
+	}
+
+	serviceInfo := &dao.GatewayServiceInfo{ID: params.ID}
+	serviceInfo, err = serviceInfo.Find(c, tx, serviceInfo)
+	if err != nil {
+		middleware.ResponseError(c, 2002, err)
+		return
+	}
+	serviceDetail, err := serviceInfo.ServiceDetail(c, tx, serviceInfo)
+	if err != nil {
+		middleware.ResponseError(c, 2003, err)
+		return
+	}
+
+	middleware.ResponseSuccess(c, serviceDetail)
 }
 
 // ServiceList godoc
@@ -26,10 +104,10 @@ func ServiceRegister(group *gin.RouterGroup) {
 // @Description 服务列表
 // @Tags 服务管理
 // @ID /service/service_list
-// @Accept json
-// @Produce json
+// @Accept  json
+// @Produce  json
 // @Param info query string false "关键词"
-// @Param page_size query int true "每页数量"
+// @Param page_size query int true "每页个数"
 // @Param page_no query int true "当前页数"
 // @Success 200 {object} middleware.Response{data=dto.ServiceListOutput} "success"
 // @Router /service/service_list [get]
@@ -64,11 +142,11 @@ func (service *ServiceController) ServiceList(c *gin.Context) {
 		serviceAddr := "unknow"
 		clusterIP := lib.GetStringConf("base.cluster.cluster_ip")
 		clusterPort := lib.GetStringConf("base.cluster.cluster_port")
-		clusterSSLPort := lib.GetStringConf("base.cluster.cluster_ssh_port")
+		clusterSSLPort := lib.GetStringConf("base.cluster.cluster_ssl_port")
 		if serviceDetail.Info.LoadType == public.LoadTypeHTTP &&
 			serviceDetail.HTTPRule.RuleType == public.HTTPRuleTypePrefixURL &&
 			serviceDetail.HTTPRule.NeedHttps == 1 {
-			serviceAddr = fmt.Sprintf("%s:%s%s", clusterIP, clusterSSLPort, serviceDetail.HTTPRule)
+			serviceAddr = fmt.Sprintf("%s:%s%s", clusterIP, clusterSSLPort, serviceDetail.HTTPRule.Rule)
 		}
 		if serviceDetail.Info.LoadType == public.LoadTypeHTTP &&
 			serviceDetail.HTTPRule.RuleType == public.HTTPRuleTypePrefixURL &&

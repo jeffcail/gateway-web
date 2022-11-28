@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/e421083458/golang_common v1.2.1
+	github.com/garyburd/redigo v1.6.0
 	github.com/gin-gonic/contrib v0.0.0-20190526021735-7fb7810ed2a0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-playground/locales v0.14.0
@@ -22,7 +23,6 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
