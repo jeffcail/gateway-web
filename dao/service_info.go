@@ -82,6 +82,15 @@ func (t *GatewayServiceInfo) ServiceDetail(c *gin.Context, tx *gorm.DB, search *
 	return detail, nil
 }
 
+func (gsi *GatewayServiceInfo) GroupByLoadType(c *gin.Context, tx *gorm.DB) ([]dto.DashServiceStatItemOutput, error) {
+	list := []dto.DashServiceStatItemOutput{}
+	query := tx.WithContext(c)
+	if err := query.Table(gsi.TableName()).Where("is_delete=0").Select("load_type, count(*) as value").Group("load_type").Scan(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
 func (gsi *GatewayServiceInfo) PageList(c *gin.Context, tx *gorm.DB, param *dto.ServiceListInput) (
 	[]GatewayServiceInfo, int64, error) {
 	total := int64(0)
